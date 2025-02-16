@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Stone Journey</title>
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .stone-info {
+            text-align: center;
+            color: #34495e;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f7f9fc;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+        }
+        input[type="text"], 
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .journey-cards {
+            margin-top: 40px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .card p {
+            margin: 10px 0;
+            color: #34495e;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .journey-stats {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #34495e;
+        }
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪨 Happy Stone Journey</h1>
+        
+        <div id="errorMessage" class="error-message">
+            Invalid stone ID. Please scan the QR code on your stone.
+        </div>
+
+        <div id="stoneInfo" class="stone-info">
+            <!-- Stone info will be inserted here -->
+        </div>
+
+        <div id="journeyStats" class="journey-stats">
+            <!-- Journey stats will be inserted here -->
+        </div>
+        
+        <div id="stoneForm">
+            <div class="form-group">
+                <label for="location">Where did you find the stone?</label>
+                <input type="text" id="location" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Leave a message for the next person:</label>
+                <textarea id="message" required></textarea>
+            </div>
+            
+            <button onclick="submitStoneJourney()">Share Your Story</button>
+        </div>
+
+        <div class="journey-cards" id="journeyCards">
+            <!-- Journey cards will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            // You'll fill this in with your Firebase details
+  apiKey: "AIzaSyBVMOTMubOV8Y1iEpK-E0TqZC5MptS6jpk",
+  authDomain: "happy-stone-tracker.firebaseapp.com",
+  projectId: "happy-stone-tracker",
+  storageBucket: "happy-stone-tracker.firebasestorage.app",
+  messagingSenderId: "454968587977",
+  appId: "1:454968587977:web:cce4e67177cdf8029ebf18",
+  measurementId: "G-CV38E0V9E4"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Get stone ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const stoneId = urlParams.get('stone');
+        
+        // Check if stone ID exists
+        if (!stoneId) {
+            document.getElementById('errorMessage').style.display = 'block';
+            document.getElementById('stoneForm').style.display = 'none';
+            document.getElementById('journeyCards').style.display = 'none';
+        }
+
+        async function loadStoneInfo() {
+            try {
+                const stoneDoc = await db.collection('stones').doc(stoneId).get();
+                if (stoneDoc.exists) {
+                    const stoneData = stoneDoc.data();
+                    document.getElementById('stoneInfo').innerHTML = `
+                        <h2>Stone #${stoneId}</h2>
+                        <p>${stoneData.description || 'A happy stone spreading joy!'}</p>
+                    `;
+                } else {
+                    // Create new stone document if it doesn't exist
+                    await db.collection('stones').doc(stoneId).set({
+                        created: firebase.firestore.FieldValue.serverTimestamp(),
+                        description: 'A happy stone spreading joy!'
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading stone info: ", error);
+            }
+        }
+        
+        async function submitStoneJourney() {
+            const location = document.getElementById('location').value;
+            const message = document.getElementById('message').value;
+            
+            if (!location || !message) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            try {
+                await db.collection('stones').doc(stoneId).collection('journeys').add({
+                    location: location,
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                document.getElementById('location').value = '';
+                document.getElementById('message').value = '';
+                
+                alert('Thank you for sharing your story!');
+                loadJourneys();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert('There was an error submitting your story. Please try again.');
+            }
+        }
+        
+        async function loadJourneys() {
+            const journeyCards = document.getElementById('journeyCards');
+            journeyCards.innerHTML = '';
+            
+            try {
+                const snapshot = await db.collection('stones').doc(stoneId)
+                    .collection('journeys')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                
+                // Update journey stats
+                document.getElementById('journeyStats').innerHTML = `
+                    <p>This stone has been found ${snapshot.size} times on its journey!</p>
+                `;
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleDateString() : 'Recent';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3>Found in ${data.location}</h3>
+                        <p>${data.message}</p>
+                        <p class="timestamp">Shared on ${date}</p>
+                    `;
+                    journeyCards.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Error loading journeys: ", error);
+            }
+        }
+        
+        // Initialize if stone ID exists
+        if (stoneId) {
+            loadStoneInfo();
+            loadJourneys();
+        }
+    </script>
+</body>
+</html>
