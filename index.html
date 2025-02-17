@@ -350,29 +350,34 @@ locationNotFound: "Locatie niet gevonden op de kaart"
         return null;
     }
 }
-        async function submitStoneJourney() {
-            const location = document.getElementById('location').value;
-            const message = document.getElementById('message').value;
-            
-            if (!location || !message) {
-                alert('Please fill in all fields');
-                return;
-            }
-            
-            try {
-                await db.collection('stones').doc(stoneId).collection('journeys').add({
-                    location: location,
-                    message: message,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                showSection(4);
-                loadJourneys();
-            } catch (error) {
-                console.error("Error adding document: ", error);
-                alert('There was an error submitting your story. Please try again.');
-            }
-        }
+async function submitStoneJourney() {
+    const location = document.getElementById('location').value;
+    const message = document.getElementById('message').value;
+    
+    if (!location || !message) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    try {
+        // Get coordinates when submitting
+        const coords = await getCoordinates(location);
+        
+        // Store both location name and coordinates
+        await db.collection('stones').doc(stoneId).collection('journeys').add({
+            location: location,
+            message: message,
+            coordinates: coords ? {lat: coords.lat, lon: coords.lon} : null,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showSection(4);
+        loadJourneys();
+    } catch (error) {
+        console.error("Error adding document: ", error);
+        alert('There was an error submitting your story. Please try again.');
+    }
+}
 
 async function loadJourneys() {
     const journeyCards = document.getElementById('journeyCards');
@@ -387,64 +392,63 @@ async function loadJourneys() {
 
         document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
         
-// Create map
-document.getElementById('mapTitle').textContent = t.mapTitle;
-const map = L.map('journeyMap', {
-    minZoom: 2,
-    maxZoom: 19
-});
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap',
-    noWrap: true
-}).addTo(map);
-
-// Set a default view until we have markers
-map.setView([0, 0], 2);
-
-// Process all locations for the map
-const journeys = [];
-const coordinates = [];
-
-// First, collect all coordinates in correct order (reverse the docs array since we want oldest first)
-const orderedDocs = [...snapshot.docs].reverse();
-for (const doc of orderedDocs) {
-    const data = doc.data();
-    const coords = await getCoordinates(data.location);
-    if (coords) {
-        coordinates.push([coords.lat, coords.lon]);
-        journeys.push({
-            ...data,
-            coords: coords
+        // Create map
+        document.getElementById('mapTitle').textContent = t.mapTitle;
+        const map = L.map('journeyMap', {
+            minZoom: 2,
+            maxZoom: 19
         });
-    }
-}
-                // Debug logs
-        console.log('Coordinates collected:', coordinates);
-        console.log('Journeys data:', journeys);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap',
+            noWrap: true
+        }).addTo(map);
+
+        const journeys = [];
+        const coordinates = [];
+
+        // Collect all coordinates from stored data
+        const orderedDocs = [...snapshot.docs].reverse();
+        for (const doc of orderedDocs) {
+            const data = doc.data();
+            
+            // Use stored coordinates if available, otherwise geocode
+            let coords = data.coordinates;
+            if (!coords && data.location) {
+                coords = await getCoordinates(data.location);
+            }
+            
+            if (coords) {
+                coordinates.push([coords.lat, coords.lon]);
+                journeys.push({
+                    ...data,
+                    coords: coords
+                });
+            }
+        }
 
         // If we have coordinates, create the map features
-if (coordinates.length > 0) {
-    // Create path first
-    const path = L.polyline(coordinates, {
-        color: '#3498db',
-        weight: 3,
-        opacity: 0.8
-    }).addTo(map);
+        if (coordinates.length > 0) {
+            // Create path
+            const path = L.polyline(coordinates, {
+                color: '#3498db',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(map);
 
-    // Add markers with popups
-    journeys.forEach((journey, index) => {
-        const marker = L.marker([journey.coords.lat, journey.coords.lon])
-            .addTo(map)
-            .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
-    });
+            // Add markers with popups
+            journeys.forEach((journey, index) => {
+                const marker = L.marker([journey.coords.lat, journey.coords.lon])
+                    .addTo(map)
+                    .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
+            });
 
-    // Fit map to show all markers with padding
-    map.fitBounds(path.getBounds(), { 
-        padding: [50, 50],
-        maxZoom: 12
-    });
-}
+            // Fit map to show all markers
+            map.fitBounds(path.getBounds(), { 
+                padding: [50, 50],
+                maxZoom: 12
+            });
+        }
 
         // Create journey cards
         journeys.forEach((journey) => {
