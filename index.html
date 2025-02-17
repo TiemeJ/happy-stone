@@ -6,8 +6,6 @@
     <title>Happy Stone Journey</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -117,25 +115,6 @@
             background: #f7f9fc;
             border-radius: 15px;
             border: 2px solid #8fd3f4;
-        #journeyMap {
-         height: 400px;
-         width: 100%;
-         margin: 20px 0;
-         border-radius: 15px;
-         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-     }
-     .map-container {
-         margin-top: 30px;
-         padding: 20px;
-         background: #f8f9fa;
-         border-radius: 15px;
-         border-left: 5px solid #84fab0;
-     }
-     .map-title {
-         text-align: center;
-         margin-bottom: 15px;
-         color: #2c3e50;
-     }
         }
     </style>
 </head>
@@ -184,10 +163,6 @@
         <!-- Section 4: Next Steps and Journey History -->
         <section id="section4" class="section">
             <h1>🪨 <span class="lang-title">Happy Stone Journey</span></h1>
-            <div class="map-container">
-    <h3 class="map-title" id="mapTitle"></h3>
-    <div id="journeyMap"></div>
-</div>
             <div class="next-steps" id="nextSteps"></div>
             <div class="journey-cards" id="journeyCards"></div>
         </section>
@@ -258,8 +233,6 @@
                 foundIn: 'Found in',
                 sharedOn: 'Shared on',
                 journeyCount: 'This stone has spread joy {count} times on its journey! ✨'
-                mapTitle: "Stone's Journey Map 🗺️",
-locationNotFound: "Location not found on map"
             },
             nl: {
                 title: 'Happy Stone Reis',
@@ -277,8 +250,6 @@ locationNotFound: "Location not found on map"
                 foundIn: 'Gevonden in',
                 sharedOn: 'Gedeeld op',
                 journeyCount: 'Deze steen heeft {count} keer vreugde verspreid tijdens zijn reis! ✨'
-                mapTitle: "Reis van de Steen 🗺️",
-locationNotFound: "Locatie niet gevonden op de kaart"
             }
         };
         function selectLanguage(lang) {
@@ -333,22 +304,6 @@ locationNotFound: "Locatie niet gevonden op de kaart"
                 console.error("Error loading stone info: ", error);
             }
         }
-        async function getCoordinates(locationString) {
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationString)}`);
-        const data = await response.json();
-        if (data.length > 0) {
-            return {
-                lat: parseFloat(data[0].lat),
-                lon: parseFloat(data[0].lon)
-            };
-        }
-        return null;
-    } catch (error) {
-        console.error("Error geocoding location:", error);
-        return null;
-    }
-}
         async function submitStoneJourney() {
             const location = document.getElementById('location').value;
             const message = document.getElementById('message').value;
@@ -373,83 +328,37 @@ locationNotFound: "Locatie niet gevonden op de kaart"
             }
         }
 
-async function loadJourneys() {
-    const journeyCards = document.getElementById('journeyCards');
-    const t = translations[currentLanguage];
-    journeyCards.innerHTML = '';
-    
-    try {
-        const snapshot = await db.collection('stones').doc(stoneId)
-            .collection('journeys')
-            .orderBy('timestamp', 'desc')
-            .get();
-
-        document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
-        
-        // Create map
-        document.getElementById('mapTitle').textContent = t.mapTitle;
-        const map = L.map('journeyMap');
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Process all locations for the map
-        const journeys = [];
-        const coordinates = [];
-        
-        // First, collect all coordinates
-        for (const doc of snapshot.docs) {
-            const data = doc.data();
-            const coords = await getCoordinates(data.location);
-            if (coords) {
-                coordinates.push([coords.lat, coords.lon]);
-                journeys.push({
-                    ...data,
-                    coords: coords
+        async function loadJourneys() {
+            const journeyCards = document.getElementById('journeyCards');
+            journeyCards.innerHTML = '';
+            const t = translations[currentLanguage];
+            
+            try {
+                const snapshot = await db.collection('stones').doc(stoneId)
+                    .collection('journeys')
+                    .orderBy('timestamp', 'desc')
+                    .get();
+                
+                document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
+                
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleDateString() : 'Recent';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3>📍 ${t.foundIn} ${data.location}</h3>
+                        <p>${data.message}</p>
+                        <p class="timestamp">${t.sharedOn} ${date}</p>
+                    `;
+                    journeyCards.appendChild(card);
                 });
+            } catch (error) {
+                console.error("Error loading journeys: ", error);
             }
         }
 
-        // If we have coordinates, create the map features
-        if (coordinates.length > 0) {
-            // Create markers and path
-            const path = L.polyline(coordinates, {
-                color: '#3498db',
-                weight: 3,
-                opacity: 0.6
-            }).addTo(map);
-
-            // Add markers with popups
-            journeys.forEach((journey, index) => {
-                const marker = L.marker([journey.coords.lat, journey.coords.lon])
-                    .addTo(map)
-                    .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
-                
-                // Add number to marker
-                marker._icon.innerHTML = `<div style="background: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; border: 2px solid #3498db;">${journeys.length - index}</div>`;
-            });
-
-            // Fit map to show all markers
-            map.fitBounds(path.getBounds(), { padding: [50, 50] });
-        }
-
-        // Create journey cards
-        journeys.forEach((journey) => {
-            const date = journey.timestamp ? journey.timestamp.toDate().toLocaleDateString() : 'Recent';
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>📍 ${t.foundIn} ${journey.location}</h3>
-                <p>${journey.message}</p>
-                <p class="timestamp">${t.sharedOn} ${date}</p>
-            `;
-            journeyCards.appendChild(card);
-        });
-
-    } catch (error) {
-        console.error("Error loading journeys:", error);
-    }
-}
         // Initialize if stone ID exists
         if (!stoneId) {
             alert('Please scan the QR code on your stone.');
