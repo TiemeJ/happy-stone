@@ -391,59 +391,60 @@ async function loadJourneys() {
 document.getElementById('mapTitle').textContent = t.mapTitle;
 const map = L.map('journeyMap', {
     minZoom: 2,
-    maxZoom: 18
+    maxZoom: 19
 });
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    subdomains: 'abc',
-    maxZoom: 18
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap',
+    noWrap: true
 }).addTo(map);
 
 // Set a default view until we have markers
 map.setView([0, 0], 2);
 
-        // Process all locations for the map
-        const journeys = [];
-        const coordinates = [];
-        
-        // First, collect all coordinates
-        for (const doc of snapshot.docs) {
-            const data = doc.data();
-            const coords = await getCoordinates(data.location);
-            if (coords) {
-                coordinates.push([coords.lat, coords.lon]);
-                journeys.push({
-                    ...data,
-                    coords: coords
-                });
-            }
-        }
+// Process all locations for the map
+const journeys = [];
+const coordinates = [];
+
+// First, collect all coordinates in correct order (reverse the docs array since we want oldest first)
+const orderedDocs = [...snapshot.docs].reverse();
+for (const doc of orderedDocs) {
+    const data = doc.data();
+    const coords = await getCoordinates(data.location);
+    if (coords) {
+        coordinates.push([coords.lat, coords.lon]);
+        journeys.push({
+            ...data,
+            coords: coords
+        });
+    }
+}
                 // Debug logs
         console.log('Coordinates collected:', coordinates);
         console.log('Journeys data:', journeys);
 
         // If we have coordinates, create the map features
-        if (coordinates.length > 0) {
-            // Create markers and path
-            const path = L.polyline(coordinates, {
-                color: '#3498db',
-                weight: 3,
-                opacity: 0.6
-            }).addTo(map);
+if (coordinates.length > 0) {
+    // Create path first
+    const path = L.polyline(coordinates, {
+        color: '#3498db',
+        weight: 3,
+        opacity: 0.8
+    }).addTo(map);
 
-            // Add markers with popups
-            journeys.forEach((journey, index) => {
-                const marker = L.marker([journey.coords.lat, journey.coords.lon])
-                    .addTo(map)
-                    .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
-                
-                // Add number to marker
-                marker._icon.innerHTML = `<div style="background: white; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; border: 2px solid #3498db;">${journeys.length - index}</div>`;
-            });
+    // Add markers with popups
+    journeys.forEach((journey, index) => {
+        const marker = L.marker([journey.coords.lat, journey.coords.lon])
+            .addTo(map)
+            .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
+    });
 
-            // Fit map to show all markers
-            map.fitBounds(path.getBounds(), { padding: [50, 50] });
-        }
+    // Fit map to show all markers with padding
+    map.fitBounds(path.getBounds(), { 
+        padding: [50, 50],
+        maxZoom: 12
+    });
+}
 
         // Create journey cards
         journeys.forEach((journey) => {
