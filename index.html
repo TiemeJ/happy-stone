@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Happy Stone Journey</title>
-    <!-- Firebase SDK -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
     <style>
@@ -24,11 +23,41 @@
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
+        .section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .section.active {
+            display: block;
+            opacity: 1;
+        }
         h1 {
             color: #2c3e50;
             text-align: center;
             margin-bottom: 20px;
             font-size: 2.5em;
+        }
+        .language-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        button {
+            background: linear-gradient(to right, #84fab0, #8fd3f4);
+            color: #2c3e50;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .welcome-message {
             text-align: center;
@@ -40,15 +69,6 @@
             border-radius: 15px;
             border-left: 5px solid #84fab0;
         }
-        .stone-info {
-            text-align: center;
-            color: #34495e;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f7f9fc;
-            border-radius: 15px;
-            border: 2px solid #8fd3f4;
-        }
         .form-group {
             margin-bottom: 25px;
         }
@@ -58,8 +78,7 @@
             color: #34495e;
             font-weight: 600;
         }
-        input[type="text"], 
-        textarea {
+        input[type="text"], textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -67,31 +86,9 @@
             font-size: 16px;
             transition: border-color 0.3s ease;
         }
-        input[type="text"]:focus, 
-        textarea:focus {
-            border-color: #84fab0;
-            outline: none;
-        }
         textarea {
             height: 120px;
             resize: vertical;
-        }
-        button {
-            background: linear-gradient(to right, #84fab0, #8fd3f4);
-            color: #2c3e50;
-            padding: 14px 28px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            display: block;
-            margin: 30px auto;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .journey-cards {
             margin-top: 40px;
@@ -103,43 +100,6 @@
             margin-bottom: 25px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
             border: 1px solid #e0e0e0;
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-3px);
-        }
-        .card h3 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-size: 1.4em;
-        }
-        .card p {
-            margin: 15px 0;
-            color: #34495e;
-            line-height: 1.6;
-        }
-        .timestamp {
-            color: #7f8c8d;
-            font-size: 0.9em;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-            margin-top: 15px;
-        }
-        .journey-stats {
-            text-align: center;
-            margin: 30px 0;
-            color: #34495e;
-            font-size: 1.2em;
-            font-weight: 600;
-        }
-        .error-message {
-            color: #e74c3c;
-            text-align: center;
-            padding: 20px;
-            display: none;
-            background: #fdf0ed;
-            border-radius: 8px;
-            margin-bottom: 20px;
         }
         .next-steps {
             background: #f1f8ff;
@@ -148,58 +108,68 @@
             margin: 30px 0;
             border-left: 5px solid #8fd3f4;
         }
+        .stone-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7f9fc;
+            border-radius: 15px;
+            border: 2px solid #8fd3f4;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🪨 Happy Stone Journey</h1>
-        
-        <div class="welcome-message">
-            <h2>Welcome to the Happy Stone Project!</h2>
-            <p>You've found a special stone that's on a mission to spread joy and connection throughout our community. Each person who finds it adds their own story to its journey.</p>
-            <p>After you share your message, please place the stone in a new location where someone else can find it and continue spreading happiness! 💫</p>
-        </div>
-
-        <div id="errorMessage" class="error-message">
-            Invalid stone ID. Please scan the QR code on your stone.
-        </div>
-
-        <div id="stoneInfo" class="stone-info">
-            <!-- Stone info will be inserted here -->
-        </div>
-
-        <div id="journeyStats" class="journey-stats">
-            <!-- Journey stats will be inserted here -->
-        </div>
-        
-        <div id="stoneForm">
-            <div class="form-group">
-                <label for="location">Where did you find the stone? 📍</label>
-                <input type="text" id="location" required placeholder="e.g., Park bench, hiking trail, cafe...">
+        <!-- Section 1: Language Selection -->
+        <section id="section1" class="section active">
+            <h1>🪨 Happy Stone Journey</h1>
+            <div class="welcome-message">
+                <h2>Welcome to the Happy Stone Project!</h2>
+                <h2>Welkom bij het Happy Stone Project!</h2>
             </div>
-            
-            <div class="form-group">
-                <label for="message">Leave a message for the next person! ✨</label>
-                <textarea id="message" required placeholder="Share your thoughts, a kind message, or what made you smile today..."></textarea>
+            <div class="language-buttons">
+                <button onclick="selectLanguage('en')">Continue in English</button>
+                <button onclick="selectLanguage('nl')">Ga verder in het Nederlands</button>
             </div>
-            
-            <button onclick="submitStoneJourney()">Share Your Story</button>
-        </div>
+        </section>
 
-        <div class="next-steps">
-            <h3>What to Do Next?</h3>
-            <p>1. Place the stone somewhere new where others might find it</p>
-            <p>2. Choose a safe, public location</p>
-            <p>3. Feel good knowing you're part of spreading joy in the world!</p>
-        </div>
+        <!-- Section 2: Project Explanation -->
+        <section id="section2" class="section">
+            <h1>🪨 <span class="lang-title">Happy Stone Journey</span></h1>
+            <div class="welcome-message">
+                <div id="explanation"></div>
+            </div>
+            <button onclick="showSection(3)" id="continueButton"></button>
+        </section>
 
-        <div class="journey-cards" id="journeyCards">
-            <!-- Journey cards will be inserted here -->
-        </div>
+        <!-- Section 3: Stone Info and Form -->
+        <section id="section3" class="section">
+            <h1>🪨 <span class="lang-title">Happy Stone Journey</span></h1>
+            <div id="stoneInfo" class="stone-info"></div>
+            <div id="journeyStats"></div>
+            <div id="stoneForm">
+                <div class="form-group">
+                    <label id="locationLabel"></label>
+                    <input type="text" id="location" required>
+                </div>
+                <div class="form-group">
+                    <label id="messageLabel"></label>
+                    <textarea id="message" required></textarea>
+                </div>
+                <button onclick="submitStoneJourney()" id="submitButton"></button>
+            </div>
+        </section>
+
+        <!-- Section 4: Next Steps and Journey History -->
+        <section id="section4" class="section">
+            <h1>🪨 <span class="lang-title">Happy Stone Journey</span></h1>
+            <div class="next-steps" id="nextSteps"></div>
+            <div class="journey-cards" id="journeyCards"></div>
+        </section>
     </div>
 
     <script>
-        // Your Firebase configuration remains the same
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBVMOTMubOV8Y1iEpK-E0TqZC5MptS6jpk",
             authDomain: "happy-stone-tracker.firebaseapp.com",
@@ -217,12 +187,74 @@
         // Get stone ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const stoneId = urlParams.get('stone');
-        
-        // Check if stone ID exists
-        if (!stoneId) {
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('stoneForm').style.display = 'none';
-            document.getElementById('journeyCards').style.display = 'none';
+
+        let currentLanguage = 'en';
+
+        const translations = {
+            en: {
+                title: 'Happy Stone Journey',
+                explanation: `<h2>What is the Happy Stone Project?</h2>
+                    <p>You've found a special stone that's on a mission to spread joy and connection throughout our community. Each person who finds it adds their own story to its journey.</p>
+                    <p>After you share your message, please place the stone in a new location where someone else can find it and continue spreading happiness!</p>`,
+                continue: 'Continue',
+                locationLabel: 'Where did you find the stone? 📍',
+                messageLabel: 'Leave a message for the next person! ✨',
+                submit: 'Share Your Story',
+                nextSteps: `<h3>What to Do Next?</h3>
+                    <p>1. Place the stone somewhere new where others might find it</p>
+                    <p>2. Choose a safe, public location</p>
+                    <p>3. Feel good knowing you're part of spreading joy in the world!</p>`,
+                foundIn: 'Found in',
+                sharedOn: 'Shared on',
+                journeyCount: 'This stone has spread joy {count} times on its journey! ✨'
+            },
+            nl: {
+                title: 'Happy Stone Reis',
+                explanation: `<h2>Wat is het Happy Stone Project?</h2>
+                    <p>Je hebt een speciale steen gevonden die op missie is om vreugde en verbinding te verspreiden in onze gemeenschap. Iedereen die de steen vindt, voegt zijn eigen verhaal toe aan de reis.</p>
+                    <p>Nadat je je bericht hebt gedeeld, plaats de steen dan op een nieuwe plek waar iemand anders hem kan vinden en het verspreiden van geluk kan voortzetten!</p>`,
+                continue: 'Ga verder',
+                locationLabel: 'Waar heb je de steen gevonden? 📍',
+                messageLabel: 'Laat een bericht achter voor de volgende persoon! ✨',
+                submit: 'Deel je verhaal',
+                nextSteps: `<h3>Wat nu te doen?</h3>
+                    <p>1. Plaats de steen ergens anders waar anderen hem kunnen vinden</p>
+                    <p>2. Kies een veilige, openbare locatie</p>
+                    <p>3. Voel je goed wetende dat je bijdraagt aan het verspreiden van vreugde in de wereld!</p>`,
+                foundIn: 'Gevonden in',
+                sharedOn: 'Gedeeld op',
+                journeyCount: 'Deze steen heeft {count} keer vreugde verspreid tijdens zijn reis! ✨'
+            }
+        };
+
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            document.querySelectorAll('.lang-title').forEach(el => {
+                el.textContent = translations[lang].title;
+            });
+            updateContent();
+            showSection(2);
+        }
+
+        function showSection(num) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`section${num}`).classList.add('active');
+            
+            if (num === 3) {
+                loadStoneInfo();
+            }
+        }
+
+        function updateContent() {
+            const t = translations[currentLanguage];
+            document.getElementById('explanation').innerHTML = t.explanation;
+            document.getElementById('continueButton').textContent = t.continue;
+            document.getElementById('locationLabel').textContent = t.locationLabel;
+            document.getElementById('messageLabel').textContent = t.messageLabel;
+            document.getElementById('submitButton').textContent = t.submit;
+            document.getElementById('nextSteps').innerHTML = t.nextSteps;
         }
 
         async function loadStoneInfo() {
@@ -235,17 +267,17 @@
                         <p>${stoneData.description || 'A happy stone spreading joy!'}</p>
                     `;
                 } else {
-                    // Create new stone document if it doesn't exist
                     await db.collection('stones').doc(stoneId).set({
                         created: firebase.firestore.FieldValue.serverTimestamp(),
                         description: 'A happy stone spreading joy!'
                     });
                 }
+                loadJourneys();
             } catch (error) {
                 console.error("Error loading stone info: ", error);
             }
         }
-        
+
         async function submitStoneJourney() {
             const location = document.getElementById('location').value;
             const message = document.getElementById('message').value;
@@ -262,20 +294,18 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                document.getElementById('location').value = '';
-                document.getElementById('message').value = '';
-                
-                alert('Thank you for sharing your story! Remember to place the stone somewhere new for the next person to find.');
+                showSection(4);
                 loadJourneys();
             } catch (error) {
                 console.error("Error adding document: ", error);
                 alert('There was an error submitting your story. Please try again.');
             }
         }
-        
+
         async function loadJourneys() {
             const journeyCards = document.getElementById('journeyCards');
             journeyCards.innerHTML = '';
+            const t = translations[currentLanguage];
             
             try {
                 const snapshot = await db.collection('stones').doc(stoneId)
@@ -283,10 +313,7 @@
                     .orderBy('timestamp', 'desc')
                     .get();
                 
-                // Update journey stats
-                document.getElementById('journeyStats').innerHTML = `
-                    <p>✨ This stone has spread joy ${snapshot.size} ${snapshot.size === 1 ? 'time' : 'times'} on its journey! ✨</p>
-                `;
+                document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
                 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -295,9 +322,9 @@
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <h3>📍 Found in ${data.location}</h3>
+                        <h3>📍 ${t.foundIn} ${data.location}</h3>
                         <p>${data.message}</p>
-                        <p class="timestamp">Shared on ${date}</p>
+                        <p class="timestamp">${t.sharedOn} ${date}</p>
                     `;
                     journeyCards.appendChild(card);
                 });
@@ -305,11 +332,10 @@
                 console.error("Error loading journeys: ", error);
             }
         }
-        
+
         // Initialize if stone ID exists
-        if (stoneId) {
-            loadStoneInfo();
-            loadJourneys();
+        if (!stoneId) {
+            alert('Please scan the QR code on your stone.');
         }
     </script>
 </body>
