@@ -404,28 +404,35 @@ async function loadJourneys() {
             noWrap: true
         }).addTo(map);
 
-        const journeys = [];
-        const coordinates = [];
+// Process all locations for the map
+const journeys = [];
+const coordinates = [];
 
-        // Collect all coordinates from stored data
-        const orderedDocs = [...snapshot.docs].reverse();
-        for (const doc of orderedDocs) {
-            const data = doc.data();
-            
-            // Use stored coordinates if available, otherwise geocode
-            let coords = data.coordinates;
-            if (!coords && data.location) {
-                coords = await getCoordinates(data.location);
-            }
-            
-            if (coords) {
-                coordinates.push([coords.lat, coords.lon]);
-                journeys.push({
-                    ...data,
-                    coords: coords
-                });
-            }
-        }
+// First, collect all coordinates in correct order
+const orderedDocs = [...snapshot.docs].reverse();
+for (const doc of orderedDocs) {
+    const data = doc.data();
+    let coords;
+    
+    // Check if we have stored coordinates
+    if (data.coordinates && data.coordinates.lat && data.coordinates.lon) {
+        coords = {
+            lat: data.coordinates.lat,
+            lon: data.coordinates.lon
+        };
+    } else {
+        // If no stored coordinates, get them from location
+        coords = await getCoordinates(data.location);
+    }
+    
+    if (coords) {
+        coordinates.push([coords.lat, coords.lon]);
+        journeys.push({
+            ...data,
+            coords: coords
+        });
+    }
+}
 
         // If we have coordinates, create the map features
         if (coordinates.length > 0) {
