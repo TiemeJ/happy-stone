@@ -428,28 +428,23 @@ async function loadJourneys() {
 
         document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
         
-// Create map
-document.getElementById('mapTitle').textContent = t.mapTitle;
-if (currentMap) {
-    currentMap.remove(); // Remove existing map if it exists
-}
+        // Create map
+        document.getElementById('mapTitle').textContent = t.mapTitle;
+        if (currentMap) {
+            currentMap.remove(); // Remove existing map if it exists
+        }
 
-currentMap = L.map('journeyMap', {
-    minZoom: 2,
-    maxZoom: 19,
-    scrollWheelZoom: true,
-    worldCopyJump: true
-}).setView([0, 0], 2);
+        currentMap = L.map('journeyMap', {
+            minZoom: 2,
+            maxZoom: 19,
+            scrollWheelZoom: true,
+            worldCopyJump: true
+        }).setView([0, 0], 2);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-}).addTo(currentMap); // Set initial view to prevent blank map
-
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-}).addTo(map);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(currentMap);
 
         const journeys = [];
         const coordinates = [];
@@ -475,53 +470,33 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         }
 
         // If we have coordinates, create the map features
-if (coordinates.length > 0) {
-    const path = L.polyline(coordinates, {
-        color: '#3498db',
-        weight: 3,
-        opacity: 0.8
-    }).addTo(currentMap);
+        if (coordinates.length > 0) {
+            const path = L.polyline(coordinates, {
+                color: '#3498db',
+                weight: 3,
+                opacity: 0.8
+            }).addTo(currentMap);
 
-    journeys.forEach((journey) => {
-        const marker = L.marker([journey.coords.lat, journey.coords.lon])
-            .addTo(currentMap)
-            .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
-    });
-
-    const bounds = path.getBounds();
-    currentMap.fitBounds(bounds, { 
-        padding: [100, 100],
-        maxZoom: 8
-    });
-    
-    // Force multiple map refreshes to ensure proper loading
-    setTimeout(() => {
-        currentMap.invalidateSize();
-    }, 100);
-    
-    setTimeout(() => {
-        currentMap.invalidateSize();
-    }, 500);
-}
-
-            // Add markers with popups
-            journeys.forEach((journey, index) => {
+            journeys.forEach((journey) => {
                 const marker = L.marker([journey.coords.lat, journey.coords.lon])
-                    .addTo(map)
+                    .addTo(currentMap)
                     .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
             });
 
-            // Fit map to show all markers with better zoom
             const bounds = path.getBounds();
-            map.fitBounds(bounds, { 
-                padding: [100, 100], // Increased padding
-                maxZoom: 8  // Lower maxZoom for a more zoomed-out view
+            currentMap.fitBounds(bounds, { 
+                padding: [100, 100],
+                maxZoom: 8
             });
             
-            // Force a map refresh
+            // Force multiple map refreshes to ensure proper loading
             setTimeout(() => {
-                map.invalidateSize();
+                currentMap.invalidateSize();
             }, 100);
+            
+            setTimeout(() => {
+                currentMap.invalidateSize();
+            }, 500);
         }
 
         // Create journey cards
