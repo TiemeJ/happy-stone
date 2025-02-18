@@ -393,16 +393,18 @@ async function loadJourneys() {
         document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
         
         // Create map
-        document.getElementById('mapTitle').textContent = t.mapTitle;
-        const map = L.map('journeyMap', {
-            minZoom: 2,
-            maxZoom: 19
-        });
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '© OpenStreetMap',
-            noWrap: true
-        }).addTo(map);
+document.getElementById('mapTitle').textContent = t.mapTitle;
+const map = L.map('journeyMap', {
+    minZoom: 2,
+    maxZoom: 19,
+    scrollWheelZoom: true,
+    worldCopyJump: true
+}).setView([0, 0], 2); // Set initial view to prevent blank map
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+}).addTo(map);
 
         const journeys = [];
         const coordinates = [];
@@ -443,11 +445,17 @@ async function loadJourneys() {
                     .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
             });
 
-            // Fit map to show all markers
-            map.fitBounds(path.getBounds(), { 
-                padding: [50, 50],
-                maxZoom: 12
+            // Fit map to show all markers with better zoom
+            const bounds = path.getBounds();
+            map.fitBounds(bounds, { 
+                padding: [100, 100], // Increased padding
+                maxZoom: 8  // Lower maxZoom for a more zoomed-out view
             });
+            
+            // Force a map refresh
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
         }
 
         // Create journey cards
