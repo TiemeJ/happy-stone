@@ -137,6 +137,30 @@
          margin-bottom: 15px;
          color: #2c3e50;
      }
+        #section4 {
+    opacity: 1 !important;
+}
+
+.map-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border-left: 5px solid #84fab0;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#journeyMap {
+    height: 400px;
+    width: 100%;
+    margin: 20px 0;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 1 !important;
+    z-index: 1;
+    display: block !important;
+}
         }
     </style>
 </head>
@@ -208,6 +232,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        let currentMap = null;
         
         let userLocation = null;
 
@@ -293,16 +318,27 @@ locationNotFound: "Locatie niet gevonden op de kaart"
             showSection(2);
         }
 
-        function showSection(num) {
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(`section${num}`).classList.add('active');
-            
-            if (num === 3) {
-                loadStoneInfo();
+function showSection(num) {
+    document.querySelectorAll('.section').forEach(section => {
+        section.classList.remove('active');
+    });
+    const targetSection = document.getElementById(`section${num}`);
+    targetSection.classList.add('active');
+    
+    if (num === 3) {
+        loadStoneInfo();
+    }
+    
+    // Add this check for section 4 (the map section)
+    if (num === 4) {
+        // Small delay to ensure DOM is ready
+        setTimeout(() => {
+            if (currentMap) {
+                currentMap.invalidateSize();
             }
-        }
+        }, 100);
+    }
+}
 
         function updateContent() {
             const t = translations[currentLanguage];
@@ -392,14 +428,23 @@ async function loadJourneys() {
 
         document.getElementById('journeyStats').innerHTML = t.journeyCount.replace('{count}', snapshot.size);
         
-        // Create map
+// Create map
 document.getElementById('mapTitle').textContent = t.mapTitle;
-const map = L.map('journeyMap', {
+if (currentMap) {
+    currentMap.remove(); // Remove existing map if it exists
+}
+
+currentMap = L.map('journeyMap', {
     minZoom: 2,
     maxZoom: 19,
     scrollWheelZoom: true,
     worldCopyJump: true
-}).setView([0, 0], 2); // Set initial view to prevent blank map
+}).setView([0, 0], 2);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+}).addTo(currentMap); // Set initial view to prevent blank map
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -430,13 +475,34 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         }
 
         // If we have coordinates, create the map features
-        if (coordinates.length > 0) {
-            // Create path
-            const path = L.polyline(coordinates, {
-                color: '#3498db',
-                weight: 3,
-                opacity: 0.8
-            }).addTo(map);
+if (coordinates.length > 0) {
+    const path = L.polyline(coordinates, {
+        color: '#3498db',
+        weight: 3,
+        opacity: 0.8
+    }).addTo(currentMap);
+
+    journeys.forEach((journey) => {
+        const marker = L.marker([journey.coords.lat, journey.coords.lon])
+            .addTo(currentMap)
+            .bindPopup(`<b>${t.foundIn} ${journey.location}</b><br>${journey.message}`);
+    });
+
+    const bounds = path.getBounds();
+    currentMap.fitBounds(bounds, { 
+        padding: [100, 100],
+        maxZoom: 8
+    });
+    
+    // Force multiple map refreshes to ensure proper loading
+    setTimeout(() => {
+        currentMap.invalidateSize();
+    }, 100);
+    
+    setTimeout(() => {
+        currentMap.invalidateSize();
+    }, 500);
+}
 
             // Add markers with popups
             journeys.forEach((journey, index) => {
