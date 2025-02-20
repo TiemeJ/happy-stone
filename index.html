@@ -6,7 +6,6 @@
     <title>Happy Stone Journey</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-storage-compat.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <style>
@@ -160,6 +159,19 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
+        #section4 {
+            opacity: 1 !important;
+        }
+        .map-container {
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        #journeyMap {
+            opacity: 1 !important;
+            z-index: 1;
+            display: block !important;
+        }
+        /* New styles for radio buttons */
         .radio-group {
             margin: 15px 0;
             padding: 10px;
@@ -184,75 +196,6 @@
             display: inline;
             margin: 0;
             cursor: pointer;
-        }
-        /* Photo upload styles */
-        .photo-upload {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .photo-preview {
-            max-width: 300px;
-            max-height: 300px;
-            margin: 10px auto;
-            border-radius: 8px;
-            display: none;
-        }
-        .photo-preview.visible {
-            display: block;
-        }
-        .camera-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: linear-gradient(to right, #84fab0, #8fd3f4);
-            color: #2c3e50;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .camera-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        .upload-progress {
-            margin-top: 10px;
-            height: 4px;
-            background-color: #e0e0e0;
-            border-radius: 2px;
-            overflow: hidden;
-            display: none;
-        }
-        .upload-progress.visible {
-            display: block;
-        }
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(to right, #84fab0, #8fd3f4);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .journey-photo {
-            width: 100%;
-            max-height: 300px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        #section4 {
-            opacity: 1 !important;
-        }
-        .map-container {
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        #journeyMap {
-            opacity: 1 !important;
-            z-index: 1;
-            display: block !important;
         }
     </style>
 </head>
@@ -295,6 +238,7 @@
                     </div>
                 </div>
 
+                <!-- New acquisition method question -->
                 <div class="form-group">
                     <label id="acquisitionLabel"></label>
                     <div class="radio-group">
@@ -317,20 +261,6 @@
                     <label id="messageLabel"></label>
                     <textarea id="message" required></textarea>
                 </div>
-
-                <!-- Photo upload section -->
-                <div class="form-group photo-upload">
-                    <label id="photoLabel"></label>
-                    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display: none">
-                    <button type="button" class="camera-button" onclick="document.getElementById('photoInput').click()">
-                        📸 <span id="takePhotoButton"></span>
-                    </button>
-                    <img id="photoPreview" class="photo-preview" alt="Preview">
-                    <div class="upload-progress">
-                        <div class="progress-bar"></div>
-                    </div>
-                </div>
-
                 <button onclick="submitStoneJourney()" id="submitButton"></button>
             </div>
         </section>
@@ -346,7 +276,6 @@
             <div class="journey-cards" id="journeyCards"></div>
         </section>
     </div>
-
     <script>
         // Firebase configuration
         const firebaseConfig = {
@@ -362,7 +291,6 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
         let currentMap = null;
         
         // Get stone ID from URL
@@ -374,11 +302,11 @@
             en: {
                 title: 'Happy Stone Journey',
                 explanation: `<h2>What is the Happy Stone Project?</h2>
-                    <p>You've found a special stone that's on a mission to spread joy and connection throughout our community. Each person who finds it adds their own story and photo to its journey.</p>
-                    <p>After you share your message and photo, please place the stone in a new location, or give it to someone else, to continue spreading happiness!</p>`,
+                    <p>You've found a special stone that's on a mission to spread joy and connection throughout our community. Each person who finds it adds their own story to its journey.</p>
+                    <p>After you share your message, please place the stone in a new location, or give it to someone else, to continue spreading happiness!</p>`,
                 continue: 'Continue',
-                locationLabel: 'Where did you find the stone? 📍
-                    locationPlaceholder: 'City/Village',
+                locationLabel: 'Where did you find the stone? 📍',
+                locationPlaceholder: 'City/Village',
                 shareLocationText: 'Automatically share location',
                 shareLocationButton: 'Share',
                 acquisitionLabel: 'How did you get the stone? 🤔',
@@ -386,10 +314,6 @@
                 acquisitionStranger: 'I received it from a stranger',
                 acquisitionKnown: 'I received it from someone I know',
                 messageLabel: 'Leave a message for the next person! ✨',
-                photoLabel: 'Take a photo of where you found or placed the stone! 📸',
-                takePhoto: 'Take Photo',
-                uploadProgress: 'Uploading photo...',
-                uploadError: 'Error uploading photo. Please try again.',
                 submit: 'Share Your Story',
                 nextSteps: `<h3>What to Do Next?</h3>
                     <p>1. Place the stone somewhere new where others might find it</p>
@@ -405,8 +329,8 @@
             nl: {
                 title: 'Happy Stone Reis',
                 explanation: `<h2>Wat is het Happy Stone Project?</h2>
-                    <p>Je hebt een speciale steen gevonden die op missie is om vreugde en verbinding te verspreiden in onze gemeenschap. Iedereen die de steen vindt, voegt zijn eigen verhaal en foto toe aan de reis.</p>
-                    <p>Nadat je je bericht en foto hebt gedeeld, plaats de steen dan op een nieuwe plek, of geef hem aan een ander, zodat het verspreiden van geluk zich kan voortzetten!</p>`,
+                    <p>Je hebt een speciale steen gevonden die op missie is om vreugde en verbinding te verspreiden in onze gemeenschap. Iedereen die de steen vindt, voegt zijn eigen verhaal toe aan de reis.</p>
+                    <p>Nadat je je bericht hebt gedeeld, plaats de steen dan op een nieuwe plek, of geef hem aan een ander, zodat het verspreiden van geluk zich kan voortzetten!</p>`,
                 continue: 'Ga verder',
                 locationLabel: 'Waar heb je de steen gevonden? 📍',
                 locationPlaceholder: 'Stad/Dorp',
@@ -417,13 +341,9 @@
                 acquisitionStranger: 'Ik kreeg hem van een onbekende',
                 acquisitionKnown: 'Ik kreeg hem van iemand die ik ken',
                 messageLabel: 'Laat een bericht achter voor de volgende persoon! ✨',
-                photoLabel: 'Maak een foto van waar je de steen vond of plaatste! 📸',
-                takePhoto: 'Maak Foto',
-                uploadProgress: 'Foto wordt geüpload...',
-                uploadError: 'Fout bij uploaden foto. Probeer het opnieuw.',
                 submit: 'Deel je verhaal',
                 nextSteps: `<h3>Wat nu te doen?</h3>
-                    <p>1. Plaats de steen ergens anders waar anderen hem kunnen vinden</p>
+                    <p>1. Plaats de steen ergens anders waar anderen hem kunnen vinden
                     <p>2. Kies een veilige, openbare locatie</p>
                     <p>3. Of geef de steen aan iemand anders</p>
                     <p>4. Voel je goed wetende dat je bijdraagt aan het verspreiden van vreugde in de wereld!</p>`,
@@ -473,29 +393,15 @@
             document.getElementById('shareLocationText').textContent = t.shareLocationText;
             document.getElementById('shareLocationButton').textContent = t.shareLocationButton;
             document.getElementById('messageLabel').textContent = t.messageLabel;
-            document.getElementById('photoLabel').textContent = t.photoLabel;
-            document.getElementById('takePhotoButton').textContent = t.takePhoto;
             document.getElementById('submitButton').textContent = t.submit;
             document.getElementById('nextSteps').innerHTML = t.nextSteps;
+            
+            // Update new acquisition field translations
             document.getElementById('acquisitionLabel').textContent = t.acquisitionLabel;
             document.getElementById('foundLabel').textContent = t.acquisitionFound;
             document.getElementById('strangerLabel').textContent = t.acquisitionStranger;
             document.getElementById('knownLabel').textContent = t.acquisitionKnown;
         }
-
-        // Add photo preview functionality
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('photoPreview');
-                    preview.src = e.target.result;
-                    preview.classList.add('visible');
-                }
-                reader.readAsDataURL(file);
-            }
-        });
 
         function shareLocation() {
             if ("geolocation" in navigator) {
@@ -563,7 +469,6 @@
             const location = document.getElementById('location').value;
             const message = document.getElementById('message').value;
             const acquisition = document.querySelector('input[name="acquisition"]:checked')?.value;
-            const photoFile = document.getElementById('photoInput').files[0];
             
             if (!location || !message || !acquisition) {
                 alert('Please fill in all fields');
@@ -572,46 +477,12 @@
             
             try {
                 const coords = await getCoordinates(location);
-                let photoUrl = null;
                 
-                // Upload photo if one was taken
-                if (photoFile) {
-                    const progressBar = document.querySelector('.progress-bar');
-                    const progressContainer = document.querySelector('.upload-progress');
-                    progressContainer.classList.add('visible');
-                    
-                    // Create a storage reference
-                    const photoRef = storage.ref(`stone-photos/${stoneId}/${Date.now()}_${photoFile.name}`);
-                    
-                    // Upload the file
-                    const uploadTask = photoRef.put(photoFile);
-                    
-                    // Monitor upload progress
-                    uploadTask.on('state_changed', 
-                        (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            progressBar.style.width = progress + '%';
-                        },
-                        (error) => {
-                            console.error("Error uploading photo:", error);
-                            alert(translations[currentLanguage].uploadError);
-                        }
-                    );
-                    
-                    // Wait for upload to complete
-                    await uploadTask;
-                    
-                    // Get the download URL
-                    photoUrl = await photoRef.getDownloadURL();
-                }
-                
-                // Add the journey document with photo URL if available
                 await db.collection('stones').doc(stoneId).collection('journeys').add({
                     location: location,
                     message: message,
                     acquisition: acquisition,
                     coordinates: coords ? {lat: coords.lat, lon: coords.lon} : null,
-                    photoUrl: photoUrl,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -692,20 +563,22 @@
                         padding: [100, 100],
                         maxZoom: 8
                     });
+                    
+                    setTimeout(() => {
+                        currentMap.invalidateSize();
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        currentMap.invalidateSize();
+                    }, 500);
                 }
 
                 journeys.forEach((journey) => {
                     const date = journey.timestamp ? journey.timestamp.toDate().toLocaleDateString() : 'Recent';
                     const card = document.createElement('div');
                     card.className = 'card';
-                    
-                    // Add photo to the card if available
-                    const photoHtml = journey.photoUrl ? 
-                        `<img src="${journey.photoUrl}" alt="Stone location" class="journey-photo">` : '';
-                    
                     card.innerHTML = `
                         <h3>📍 ${t.foundIn} ${journey.location}</h3>
-                        ${photoHtml}
                         <p>${journey.message}</p>
                         <p class="timestamp">${t.sharedOn} ${date}</p>
                     `;
