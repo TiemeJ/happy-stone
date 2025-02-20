@@ -171,6 +171,32 @@
             z-index: 1;
             display: block !important;
         }
+        /* New styles for radio buttons */
+        .radio-group {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            transition: background-color 0.2s;
+        }
+        .radio-option:hover {
+            background-color: #edf2f7;
+        }
+        .radio-option input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .radio-option label {
+            display: inline;
+            margin: 0;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -211,6 +237,26 @@
                         <button onclick="shareLocation()" id="shareLocationButton" class="share-button"></button>
                     </div>
                 </div>
+
+                <!-- New acquisition method question -->
+                <div class="form-group">
+                    <label id="acquisitionLabel"></label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="found" name="acquisition" value="found" required>
+                            <label for="found" id="foundLabel"></label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="stranger" name="acquisition" value="stranger">
+                            <label for="stranger" id="strangerLabel"></label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="known" name="acquisition" value="known">
+                            <label for="known" id="knownLabel"></label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label id="messageLabel"></label>
                     <textarea id="message" required></textarea>
@@ -263,6 +309,10 @@
                 locationPlaceholder: 'City/Village',
                 shareLocationText: 'Automatically share location',
                 shareLocationButton: 'Share',
+                acquisitionLabel: 'How did you get the stone? 🤔',
+                acquisitionFound: 'I found it',
+                acquisitionStranger: 'I received it from a stranger',
+                acquisitionKnown: 'I received it from someone I know',
                 messageLabel: 'Leave a message for the next person! ✨',
                 submit: 'Share Your Story',
                 nextSteps: `<h3>What to Do Next?</h3>
@@ -286,10 +336,14 @@
                 locationPlaceholder: 'Stad/Dorp',
                 shareLocationText: 'Automatisch locatie delen',
                 shareLocationButton: 'Delen',
+                acquisitionLabel: 'Hoe ben je aan de steen gekomen? 🤔',
+                acquisitionFound: 'Ik heb hem gevonden',
+                acquisitionStranger: 'Ik kreeg hem van een onbekende',
+                acquisitionKnown: 'Ik kreeg hem van iemand die ik ken',
                 messageLabel: 'Laat een bericht achter voor de volgende persoon! ✨',
                 submit: 'Deel je verhaal',
                 nextSteps: `<h3>Wat nu te doen?</h3>
-                    <p>1. Plaats de steen ergens anders waar anderen hem kunnen vinden</p>
+                    <p>1. Plaats de steen ergens anders waar anderen hem kunnen vinden
                     <p>2. Kies een veilige, openbare locatie</p>
                     <p>3. Of geef de steen aan iemand anders</p>
                     <p>4. Voel je goed wetende dat je bijdraagt aan het verspreiden van vreugde in de wereld!</p>`,
@@ -341,6 +395,12 @@
             document.getElementById('messageLabel').textContent = t.messageLabel;
             document.getElementById('submitButton').textContent = t.submit;
             document.getElementById('nextSteps').innerHTML = t.nextSteps;
+            
+            // Update new acquisition field translations
+            document.getElementById('acquisitionLabel').textContent = t.acquisitionLabel;
+            document.getElementById('foundLabel').textContent = t.acquisitionFound;
+            document.getElementById('strangerLabel').textContent = t.acquisitionStranger;
+            document.getElementById('knownLabel').textContent = t.acquisitionKnown;
         }
 
         function shareLocation() {
@@ -408,8 +468,9 @@
         async function submitStoneJourney() {
             const location = document.getElementById('location').value;
             const message = document.getElementById('message').value;
+            const acquisition = document.querySelector('input[name="acquisition"]:checked')?.value;
             
-            if (!location || !message) {
+            if (!location || !message || !acquisition) {
                 alert('Please fill in all fields');
                 return;
             }
@@ -420,6 +481,7 @@
                 await db.collection('stones').doc(stoneId).collection('journeys').add({
                     location: location,
                     message: message,
+                    acquisition: acquisition,
                     coordinates: coords ? {lat: coords.lat, lon: coords.lon} : null,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
