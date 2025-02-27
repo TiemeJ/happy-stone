@@ -38,14 +38,25 @@
         h1 {
             color: #2c3e50;
             text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5em;
+            margin-bottom: 15px;
+            margin-top: 15px;
+            font-size: 2em;
         }
         .language-buttons {
             display: flex;
             justify-content: center;
             gap: 20px;
             margin: 30px 0;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .language-buttons button {
+            width: 190px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         button {
             background: linear-gradient(to right, #84fab0, #8fd3f4);
@@ -65,21 +76,24 @@
         .welcome-message {
             text-align: center;
             color: #34495e;
-            margin: 30px auto;
-            max-width: 600px;
-            padding: 20px;
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 10px 15px;
             background: #f8f9fa;
             border-radius: 15px;
             border-left: 5px solid #84fab0;
         }
         .form-group {
             margin-bottom: 25px;
+            padding: 0 15px; /* Add padding on both sides for symmetry */
+            box-sizing: border-box;
         }
         label {
             display: block;
             margin-bottom: 8px;
             color: #34495e;
             font-weight: 600;
+            text-align: left; /* Ensure label alignment */
         }
         input[type="text"], textarea {
             width: 100%;
@@ -88,10 +102,24 @@
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s ease;
+            box-sizing: border-box; /* Ensure padding is included in width */
         }
         textarea {
             height: 120px;
             resize: vertical;
+        }
+                /* Make the submit button match as well */
+        #submitButton {
+            display: block;
+            width: 90%;
+            margin: 20px auto;
+        }
+        
+        /* Photo upload container */
+        .photo-upload {
+            margin: 20px 0;
+            text-align: center;
+            width: 100%;
         }
         .journey-cards {
             margin-top: 40px;
@@ -111,13 +139,21 @@
             margin: 30px 0;
             border-left: 5px solid #8fd3f4;
         }
-        .stone-info {
+        .stone-thumbnail-container {
             text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f7f9fc;
-            border-radius: 15px;
-            border: 2px solid #8fd3f4;
+            margin: 20px auto;
+            max-width: 150px;
+        }
+        .stone-thumbnail {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .stone-thumbnail:hover {
+            transform: scale(1.05);
         }
         #journeyMap {
             height: 400px;
@@ -248,9 +284,9 @@
         }
         .dashboard-button {
             display: block;
-            width: 100%;
+            width: 90%; /* Match other elements at 90% width */
             padding: 16px;
-            margin: 20px 0;
+            margin: 20px auto; /* Auto margins for horizontal centering */
             background: linear-gradient(to right, #84fab0, #8fd3f4);
             color: #2c3e50;
             text-align: center;
@@ -263,20 +299,118 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+        .stone-photo-container {
+            margin: 30px auto 0;
+            text-align: center;
+            max-width: 300px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        .stone-photo {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .stone-photo:hover {
+            transform: scale(1.05);
+            cursor: pointer;
+        }
+        .photo-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 10px;
+            transition: transform 0.2s;
+        }
+        .close-modal:hover {
+            transform: scale(1.1);
+        }
+        .loading-spinner {
+            display: block;
+            width: 50px;
+            height: 50px;
+            margin: 20px auto;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #84fab0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Added styles for journey stats */
+        #journeyStats {
+            text-align: center;
+            font-weight: 600;
+            color: #34495e;
+            margin: 20px auto 40px; /* Increased bottom margin to add more space */
+            padding: 15px;
+            background: #f1f8ff;
+            border-radius: 10px;
+            max-width: 90%;
+            border-left: 5px solid #8fd3f4;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Photo Modal -->
+        <div id="photoModal" class="photo-modal">
+            <div class="modal-content">
+                <button class="close-modal" onclick="closePhotoModal()">×</button>
+                <img id="modalImage" src="" alt="Stone photo">
+            </div>
+        </div>
+
         <!-- Section 1: Language Selection -->
         <section id="section1" class="section active">
             <h1>🪨 Happy Stone Journey</h1>
             <div class="welcome-message">
                 <h2>Welcome to the Happy Stone Project!</h2>
-                <h2>Welkom bij het Happy Stone Project!</h2>
             </div>
             <div class="language-buttons">
-                <button onclick="selectLanguage('en')">Continue in English</button>
-                <button onclick="selectLanguage('nl')">Ga verder in het Nederlands</button>
+                <button onclick="selectLanguage('en')">English</button>
+                <button onclick="selectLanguage('nl')">Nederlands</button>
+            </div>
+            <!-- Added stone photo container below language buttons -->
+            <div id="stonePhotoContainer" class="stone-photo-container">
+                <div class="loading-spinner"></div>
+                <h3>Loading Stone Photo...</h3>
             </div>
         </section>
 
@@ -286,13 +420,17 @@
             <div class="welcome-message">
                 <div id="explanation"></div>
             </div>
-            <button onclick="showSection(3)" id="continueButton"></button>
+            <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+                <button onclick="showSection(3)" id="continueButton"></button>
+            </div>
         </section>
 
         <!-- Section 3: Stone Info and Form -->
         <section id="section3" class="section">
             <h1>🪨 <span class="lang-title">Happy Stone Journey</span></h1>
-            <div id="stoneInfo" class="stone-info"></div>
+            <div id="stoneThumbnailContainer" class="stone-thumbnail-container">
+                <!-- Stone thumbnail will be loaded here -->
+            </div>
             <div id="journeyStats"></div>
             <div id="stoneForm">
                 <div class="form-group">
@@ -301,24 +439,6 @@
                     <div class="location-share">
                         <span id="shareLocationText"></span>
                         <button onclick="shareLocation()" id="shareLocationButton" class="share-button"></button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label id="acquisitionLabel"></label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="found" name="acquisition" value="found" required>
-                            <label for="found" id="foundLabel"></label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="stranger" name="acquisition" value="stranger">
-                            <label for="stranger" id="strangerLabel"></label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="known" name="acquisition" value="known">
-                            <label for="known" id="knownLabel"></label>
-                        </div>
                     </div>
                 </div>
 
@@ -377,8 +497,7 @@
         let currentMap = null;
         
         // Get stone ID from URL
-        const urlParams = new URLSearchParams(window.
-           location.search);
+        const urlParams = new URLSearchParams(window.location.search);
         const stoneId = urlParams.get('stone');
 
         let currentLanguage = 'en';
@@ -411,7 +530,9 @@
                 journeyCount: 'This stone has spread joy {count} times on its journey! ✨',
                 mapTitle: "Stone's Journey Map 🗺️",
                 locationNotFound: "Location not found on map",
-                dashboardButton: "Want to keep following this stone's journey? Press this button and Bookmark me!"
+                dashboardButton: "Want to keep following this stone's journey? Press this button and Bookmark me!",
+                stonePhotoTitle: "Your Stone",
+                noPhotoAvailable: "No photo available yet"
             },
             nl: {
                 title: 'Happy Stone Reis',
@@ -441,9 +562,94 @@
                 journeyCount: 'Deze steen heeft {count} keer vreugde verspreid tijdens zijn reis! ✨',
                 mapTitle: "Reis van de Steen 🗺️",
                 locationNotFound: "Locatie niet gevonden op de kaart",
-                dashboardButton: "Wil je deze steen blijven volgen? Druk op deze knop en voeg bladwijzer toe!"
+                dashboardButton: "Wil je deze steen blijven volgen? Druk op deze knop en voeg bladwijzer toe!",
+                stonePhotoTitle: "Jouw Steen",
+                noPhotoAvailable: "Nog geen foto beschikbaar"
             }
         };
+
+        // Function to open photo modal
+        function openPhotoModal(url) {
+            const modal = document.getElementById('photoModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'flex';
+            modalImg.src = url;
+        }
+
+        // Function to close photo modal
+        function closePhotoModal() {
+            const modal = document.getElementById('photoModal');
+            modal.style.display = 'none';
+        }
+
+        // Load stone photo for the intro page
+        async function loadStonePhoto() {
+            if (!stoneId) {
+                document.getElementById('stonePhotoContainer').innerHTML = `
+                    <p>Please scan the QR code on your stone to see your stone's photo and journey.</p>
+                `;
+                return;
+            }
+
+            try {
+                // First check if the stone has a feature photo in Firestore
+                const stoneDoc = await db.collection('stones').doc(stoneId).get();
+                const stoneData = stoneDoc.data() || {};
+                
+                let photoUrl = null;
+                
+                // Check if there's a feature photo URL in Firestore
+                if (stoneData.featurePhoto && stoneData.featurePhoto.url) {
+                    photoUrl = stoneData.featurePhoto.url;
+                    console.log("Found photo in Firestore:", photoUrl);
+                } else {
+                    // If not in Firestore, try to get it directly from Storage
+                    try {
+                        console.log("Checking Storage for photo: ", `stones/${stoneId}/${stoneId}`);
+                        const storageRef = storage.ref(`stones/${stoneId}/${stoneId}`);
+                        photoUrl = await storageRef.getDownloadURL();
+                        console.log("Found photo in Storage:", photoUrl);
+                        
+                        // Update Firestore with the photo URL for future reference
+                        try {
+                            await db.collection('stones').doc(stoneId).update({
+                                featurePhoto: {
+                                    url: photoUrl,
+                                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                }
+                            });
+                            console.log("Updated Firestore with Storage photo URL");
+                        } catch (updateError) {
+                            console.error("Error updating Firestore with photo URL:", updateError);
+                        }
+                    } catch (storageError) {
+                        console.log("No feature photo found in Storage:", storageError);
+                    }
+                }
+                
+                const stonePhotoContainer = document.getElementById('stonePhotoContainer');
+                const t = translations[currentLanguage];
+                
+                if (photoUrl) {
+                    stonePhotoContainer.innerHTML = `
+                        <img src="${photoUrl}" alt="Stone #${stoneId}" class="stone-photo" 
+                             onclick="openPhotoModal('${photoUrl}')">
+                    `;
+                } else {
+                    stonePhotoContainer.innerHTML = `
+                        <div style="width: 200px; height: 200px; margin: 0 auto; display: flex; align-items: center; 
+                                    justify-content: center; background: #f5f5f5; border-radius: 10px; border: 1px dashed #ccc;">
+                            <p style="color: #666; margin: 0; font-size: 0.9em;">${t.noPhotoAvailable}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error loading stone photo:", error);
+                document.getElementById('stonePhotoContainer').innerHTML = `
+                    <p>Error loading stone photo. Please try refreshing the page.</p>
+                `;
+            }
+        }
 
         function selectLanguage(lang) {
             currentLanguage = lang;
@@ -451,6 +657,10 @@
                 el.textContent = translations[lang].title;
             });
             updateContent();
+            
+            // Update stone photo text with new language
+            loadStonePhoto();
+            
             showSection(2);
         }
 
@@ -489,12 +699,6 @@
             document.getElementById('photoLabel').textContent = t.photoLabel;
             document.getElementById('uploadButtonText').textContent = t.uploadButton;
             
-            // Update acquisition field translations
-            document.getElementById('acquisitionLabel').textContent = t.acquisitionLabel;
-            document.getElementById('foundLabel').textContent = t.acquisitionFound;
-            document.getElementById('strangerLabel').textContent = t.acquisitionStranger;
-            document.getElementById('knownLabel').textContent = t.acquisitionKnown;
-
             // Update dashboard button
             const dashboardButton = document.getElementById('dashboardButton');
             dashboardButton.textContent = t.dashboardButton;
@@ -543,19 +747,70 @@
 
         async function loadStoneInfo() {
             try {
+                // First check if the stone document exists
                 const stoneDoc = await db.collection('stones').doc(stoneId).get();
-                if (stoneDoc.exists) {
-                    const stoneData = stoneDoc.data();
-                    document.getElementById('stoneInfo').innerHTML = `
-                        <h2>Stone #${stoneId}</h2>
-                        <p>${stoneData.description || 'A happy stone spreading joy!'}</p>
-                    `;
-                } else {
+                if (!stoneDoc.exists) {
+                    // Create the stone document if it doesn't exist
                     await db.collection('stones').doc(stoneId).set({
                         created: firebase.firestore.FieldValue.serverTimestamp(),
                         description: 'A happy stone spreading joy!'
                     });
                 }
+                
+                // Load the stone photo
+                const stoneThumbnailContainer = document.getElementById('stoneThumbnailContainer');
+                stoneThumbnailContainer.innerHTML = '<div class="loading-spinner"></div>';
+                
+                try {
+                    // First look for feature photo in Firestore
+                    const stoneData = stoneDoc.data() || {};
+                    let photoUrl = null;
+                    
+                    if (stoneData.featurePhoto && stoneData.featurePhoto.url) {
+                        photoUrl = stoneData.featurePhoto.url;
+                    } else {
+                        // If not in Firestore, try Storage directly
+                        try {
+                            const storageRef = storage.ref(`stones/${stoneId}/${stoneId}`);
+                            photoUrl = await storageRef.getDownloadURL();
+                            
+                            // Update Firestore for future reference
+                            try {
+                                await db.collection('stones').doc(stoneId).update({
+                                    featurePhoto: {
+                                        url: photoUrl,
+                                        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                    }
+                                });
+                            } catch (updateError) {
+                                console.error("Error updating Firestore with photo URL:", updateError);
+                            }
+                        } catch (storageError) {
+                            console.log("No feature photo found in Storage:", storageError);
+                        }
+                    }
+                    
+                    // Display the photo or a placeholder
+                    if (photoUrl) {
+                        stoneThumbnailContainer.innerHTML = `
+                            <img src="${photoUrl}" alt="Stone #${stoneId}" class="stone-thumbnail" 
+                                onclick="openPhotoModal('${photoUrl}')">
+                        `;
+                    } else {
+                        // Simple placeholder if no photo
+                        stoneThumbnailContainer.innerHTML = `
+                            <div style="width: 120px; height: 120px; margin: 0 auto; display: flex; align-items: center; 
+                                        justify-content: center; background: #f5f5f5; border-radius: 10px; border: 1px dashed #ccc;">
+                                <p style="color: #666; margin: 0; font-size: 0.8em; text-align: center;">Stone #${stoneId}</p>
+                            </div>
+                        `;
+                    }
+                } catch (photoError) {
+                    console.error("Error loading stone photo:", photoError);
+                    stoneThumbnailContainer.innerHTML = `<p>Error loading stone photo</p>`;
+                }
+                
+                // Load journeys
                 loadJourneys();
             } catch (error) {
                 console.error("Error loading stone info: ", error);
@@ -583,9 +838,8 @@
             try {
                 const location = document.getElementById('location').value;
                 const message = document.getElementById('message').value;
-                const acquisition = document.querySelector('input[name="acquisition"]:checked')?.value;
                 
-                if (!location || !message || !acquisition) {
+                if (!location || !message) {
                     alert('Please fill in all fields');
                     return;
                 }
@@ -598,7 +852,7 @@
                     journeyId: journeyId,
                     location: location,
                     message: message,
-                    acquisition: acquisition,
+                    acquisition: "found", // Set a default value since we removed the question
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
@@ -746,9 +1000,28 @@
             }
         }
 
-        if (!stoneId) {
-            alert('Please scan the QR code on your stone.');
-        }
+        // Event listeners for modals
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePhotoModal();
+            }
+        });
+
+        // Handle escape key for modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closePhotoModal();
+            }
+        });
+
+        // Load stone photo on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStonePhoto();
+            
+            if (!stoneId) {
+                alert('Please scan the QR code on your stone.');
+            }
+        });
     </script>
 </body>
 </html>
