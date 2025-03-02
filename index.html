@@ -108,7 +108,7 @@
             height: 120px;
             resize: vertical;
         }
-                /* Make the submit button match as well */
+        /* Make the submit button match as well */
         #submitButton {
             display: block;
             width: 90%;
@@ -139,22 +139,28 @@
             margin: 30px 0;
             border-left: 5px solid #8fd3f4;
         }
+        
+        /* Updated stone thumbnail container - removed background & border */
         .stone-thumbnail-container {
             text-align: center;
             margin: 20px auto;
             max-width: 150px;
+            background: transparent;
         }
+        
+        /* Updated stone thumbnail - drop-shadow instead of box-shadow */
         .stone-thumbnail {
             max-width: 100%;
             max-height: 150px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
             cursor: pointer;
             transition: transform 0.2s;
+            background: transparent;
         }
         .stone-thumbnail:hover {
             transform: scale(1.05);
         }
+        
         #journeyMap {
             height: 400px;
             width: 100%;
@@ -299,27 +305,32 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+        
+        /* Updated stone photo container - removed background & border */
         .stone-photo-container {
             margin: 30px auto 0;
             text-align: center;
             max-width: 300px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
+        
+        /* Updated stone photo - drop-shadow instead of box-shadow */
         .stone-photo {
             max-width: 100%;
             max-height: 250px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
             transition: transform 0.2s;
+            background: transparent;
         }
         .stone-photo:hover {
             transform: scale(1.05);
             cursor: pointer;
         }
+        
+        /* Updated photo modal styles */
         .photo-modal {
             display: none;
             position: fixed;
@@ -336,12 +347,13 @@
             max-width: 90%;
             max-height: 90%;
             position: relative;
+            background: transparent;
         }
         .modal-content img {
             max-width: 100%;
             max-height: 90vh;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+            background: transparent;
         }
         .close-modal {
             position: absolute;
@@ -409,6 +421,19 @@
         
         .journey-marker-final {
             background-color: #e74c3c;
+        }
+        
+        /* New placeholder style when no photo is available */
+        .stone-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(132, 250, 176, 0.2);
+            border: 2px dashed rgba(132, 250, 176, 0.5);
         }
     </style>
 </head>
@@ -662,8 +687,7 @@
                     `;
                 } else {
                     stonePhotoContainer.innerHTML = `
-                        <div style="width: 200px; height: 200px; margin: 0 auto; display: flex; align-items: center; 
-                                    justify-content: center; background: #f5f5f5; border-radius: 10px; border: 1px dashed #ccc;">
+                        <div class="stone-placeholder">
                             <p style="color: #666; margin: 0; font-size: 0.9em;">${t.noPhotoAvailable}</p>
                         </div>
                     `;
@@ -824,8 +848,7 @@
                     } else {
                         // Simple placeholder if no photo
                         stoneThumbnailContainer.innerHTML = `
-                            <div style="width: 120px; height: 120px; margin: 0 auto; display: flex; align-items: center; 
-                                        justify-content: center; background: #f5f5f5; border-radius: 10px; border: 1px dashed #ccc;">
+                            <div class="stone-placeholder">
                                 <p style="color: #666; margin: 0; font-size: 0.8em; text-align: center;">Stone #${stoneId}</p>
                             </div>
                         `;
